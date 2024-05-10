@@ -1,0 +1,202 @@
+local Plr
+local lp = game:GetService("Players").LocalPlayer
+local cc = game:GetService("Workspace").CurrentCamera
+local mouse = lp:GetMouse()
+getgenv().PredictionBackUp = getgenv().Silent.Settings.Prediction
+local mid = workspace.CurrentCamera.ViewportSize * 0.5
+local cc = game:GetService("Workspace").CurrentCamera
+local mouse = lp:GetMouse()
+local FOVCircle = Drawing.new("Circle")
+
+local function updateFOV()
+	FOVCircle.Radius = AimAssist.FOV.Size * 3.05
+	FOVCircle.Visible = AimAssist.FOV.Enabled
+	FOVCircle.Transparency = AimAssist.FOV.Transparency
+	FOVCircle.Filled = Silent.FOV.Filled
+	FOVCircle.Color = Silent.FOV.Color
+	FOVCircle.Thickness = Silent.FOV.Thickness
+	FOVCircle.Position = mid
+	return FOVCircle
+end
+local function Predict(Velocity)
+    return V3(Velocity.X,math.clamp(Velocity.Y,-5,10),Velocity.Z)
+end
+local function GetSilentPrediction(Part)
+    return Part.CFrame + (Predict(Part.Velocity) * getgenv().PREDICTION)
+end
+local enabled = false
+local plrService = game:GetService("Players")
+local localPlr = plrService.LocalPlayer
+local mouseLocal = localPlr:GetMouse()
+local Players, Client, Mouse, Camera =
+    game:GetService("Players"),
+    game:GetService("Players").LocalPlayer,
+    game:GetService("Players").LocalPlayer:GetMouse(),
+    game:GetService("Workspace").CurrentCamera
+    
+local function wallCheck(destination, ignore)
+	if (getgenv().Silent.Settings.WallCheck) then
+		local Origin = Camera.CFrame.p
+		local CheckRay = Ray.new(Origin, destination - Origin)
+		local Hit = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(CheckRay, ignore)
+		return Hit == nil
+	else
+		return true
+	end
+end
+
+local function getClosestPlayerToCursor()
+    closestDist = FOVCircle.Radius
+    closestPlr = nil
+    for _, v in pairs(plrService:GetPlayers()) do
+        pcall(function()
+            if v ~= localPlr and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+                local primaryPart = v.Character:FindFirstChild("HumanoidRootPart") or v.Character.PrimaryPart
+                if primaryPart then
+                    local screenPos, cameraVisible = Camera:WorldToViewportPoint(primaryPart.Position)
+                    if cameraVisible then
+                        local distToMouse = (Vector2.new(screenPos.X, screenPos.Y) - FOVCircle.Position).magnitude
+                        if distToMouse < closestDist and wallCheck(v.Character.PrimaryPart.Position, {game:GetService("Players").LocalPlayer,v.Character}) then
+                            closestPlr = v
+                            closestDist = distToMouse
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    return closestPlr
+end
+
+game:GetService("RunService").PostSimulation:connect(function()
+    Plr = getClosestPlayerToCursor()
+end)
+game:GetService("RunService").PostSimulation:connect(function()
+	updateFOV()
+end)
+
+    local placemarker = Instance.new("Part", game.Workspace)
+    function makemarker(Parent, Adornee, Color, Size, Size2)
+        local e = Instance.new("BillboardGui", Parent)
+        e.Name = "PP"
+        e.Adornee = Adornee
+        e.Size = UDim2.new(Size, Size2, Size, Size2)
+        e.AlwaysOnTop = true
+        local a = Instance.new("Frame", e)
+        a.Size = UDim2.new(0, 0, 0, 0)
+        a.Transparency = 0
+        a.BackgroundTransparency = 0
+        a.BackgroundColor3 = Color
+        local g = Instance.new("UICorner", a)
+        g.CornerRadius = UDim.new(0, 0)
+        g.CornerRadius = UDim.new(0, 0)
+        return(e)
+    end
+task.spawn(function()
+        placemarker.Anchored = true
+        placemarker.CanCollide = false
+        placemarker.Size = Vector3.new(0,0,0)
+        placemarker.Transparency = 0.0006
+        makemarker(placemarker, placemarker, Color3.fromRGB(115,0,0), 1, 0)
+    end)
+game:GetService("RunService").PreRender:connect(function()
+        if not Plr then
+        placemarker.CFrame = CFrame.new(0, 9999, 0)
+                return
+        end
+        if Plr == nil then
+            placemarker.CFrame = CFrame.new(0, 9999, 0)
+                return
+        end
+        if getgenv().Silent.Settings.Enabled and getgenv().Silent.Settings.Visualize and Plr.Character ~= nil and Plr.Character:FindFirstChild("HumanoidRootPart") or getgenv().Silent.Settings.Enabled and Plr.Character ~= nil and Plr.Character:FindFirstChild("HumanoidRootPart") then
+         placemarker.CFrame = CFrame.new(Plr.Character.HumanoidRootPart.Position + (Plr.Character.HumanoidRootPart.Velocity * getgenv().PredictionBackUp))
+        end
+pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+split = string.split(pingvalue,'(')
+ping = tonumber(split[1])
+if getgenv().AimAssist.Settings.AutoPrediction == true then
+    if ping > 300 then
+        getgenv().AimAssist.Settings.Prediction = 0.434
+    elseif ping > 290 then
+        getgenv().AimAssist.Settings.Prediction = 0.422
+    elseif ping > 280 then
+        getgenv().AimAssist.Settings.Prediction = 0.44
+    elseif ping > 270 then
+        getgenv().AimAssist.Settings.Prediction = 0.4385
+    elseif ping > 260 then
+        getgenv().AimAssist.Settings.Prediction = 0.4158
+    elseif ping > 250 then
+        getgenv().AimAssist.Settings.Prediction = 0.3148
+    elseif ping > 240 then
+        getgenv().AimAssist.Settings.Prediction = 0.34
+    elseif ping > 230 then
+        getgenv().AimAssist.Settings.Prediction = 0.33
+    elseif ping > 220 then
+        getgenv().AimAssist.Settings.Prediction = 0.30
+    elseif ping > 210 then
+        getgenv().AimAssist.Settings.Prediction = 0.295
+    elseif ping > 200 then
+        getgenv().AimAssist.Settings.Prediction = 0.2915
+    elseif ping > 190 then
+        getgenv().AimAssist.Settings.Prediction = 0.2911
+    elseif ping > 180 then
+        getgenv().AimAssist.Settings.Prediction = 0.28291198328
+    elseif ping > 180 then
+        getgenv().AimAssist.Settings.Prediction = 0.25291198328
+    elseif ping > 170 then
+        getgenv().AimAssist.Settings.Prediction = 0.28
+    elseif ping > 160 then
+        getgenv().AimAssist.Settings.Prediction = 0.2754
+    elseif ping  >150 then
+        getgenv().AimAssist.Settings.Prediction = 0.271
+    elseif ping  >140 then
+        getgenv().AimAssist.Settings.Prediction = 0.25
+       elseif ping > 130 then
+        getgenv().AimAssist.Settings.Prediction = 0.12057
+    elseif ping > 120 then
+        getgenv().AimAssist.Settings.Prediction = 0.1966
+    elseif ping > 110 then
+        getgenv().AimAssist.Settings.Prediction = 0.18642271
+    elseif ping > 100 then
+        getgenv().AimAssist.Settings.Prediction = 0.18533
+    elseif ping > 90 then
+        getgenv().AimAssist.Settings.Prediction = 0.1749573
+    elseif ping > 80 then
+        getgenv().AimAssist.Settings.Prediction = 0.1745
+    elseif ping > 70 then
+        getgenv().AimAssist.Settings.Prediction = 0.1642
+    elseif ping > 50 then
+        getgenv().AimAssist.Settings.Prediction = 0.14267
+    elseif ping > 40 then
+        getgenv().AimAssist.Settings.Prediction = 0.142
+    elseif ping > 30 then
+        getgenv().AimAssist.Settings.Prediction = 0.1312
+   elseif ping > 20 then
+        getgenv().AimAssist.Settings.Prediction = 0.1312
+   elseif ping > 10 then
+        getgenv().AimAssist.Settings.Prediction = 0.1287
+   end
+end
+end)
+
+local rawmetatable = getrawmetatable(game)
+local old = rawmetatable.__namecall
+setreadonly(rawmetatable, false)
+rawmetatable.__namecall =
+    newcclosure(
+    function(...)
+	local args = {
+		...
+	}
+	local vap = {"UpdateMousePos", "GetMousePos", "MousePos", "MOUSE", "MousePosUpdate"}
+	if Plr ~= nil and AimAssist.Settings.Enabled and getnamecallmethod() == "FireServer" and table.find(vap,args[2]) then
+		args[3] = Plr.Character[AimAssist.Settings.AimPart].CFrame.Position+(Plr.Character.HumanoidRootPart.AssemblyLinearVelocity*getgenv().AimAssist.Settings.Prediction)
+		return old(unpack(args))
+	end
+	return old(...)
+end
+)d
+	return old(...)
+end
+)
